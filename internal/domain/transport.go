@@ -18,12 +18,10 @@ const (
 
 // Vehicle описывает транспорт, который можно проверить и поставить на баланс.
 type Vehicle interface {
-	InventoryNumber() string
-	Name() string
+	InventoryItem
 	IsServiceable() bool
 	BeginnerEase() int
 	SuitableForBeginner() bool
-	Validate() error
 }
 
 // ValidateVehicle проверяет наличие транспорта и корректность его данных.

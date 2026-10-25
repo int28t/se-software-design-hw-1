@@ -17,13 +17,13 @@ func (f inspectorFunc) Inspect(transport domain.Vehicle) (bool, error) {
 }
 
 type repositoryStub struct {
-	admissions []application.Admission
+	admissions []application.InventoryRecord
 	addErr     error
 	listErr    error
 	addCalls   int
 }
 
-func (r *repositoryStub) Add(admission application.Admission) error {
+func (r *repositoryStub) Add(admission application.InventoryRecord) error {
 	r.addCalls++
 	if r.addErr != nil {
 		return r.addErr
@@ -32,7 +32,7 @@ func (r *repositoryStub) Add(admission application.Admission) error {
 	return nil
 }
 
-func (r *repositoryStub) List() ([]application.Admission, error) {
+func (r *repositoryStub) List() ([]application.InventoryRecord, error) {
 	return slices.Clone(r.admissions), r.listErr
 }
 
@@ -72,7 +72,7 @@ func TestAdmitUsesInjectedInspectionBeforeSaving(t *testing.T) {
 			if calls != 1 || repository.addCalls != 1 || len(repository.admissions) != 1 {
 				t.Fatalf("Inspect calls = %d, Add calls = %d, records = %d", calls, repository.addCalls, len(repository.admissions))
 			}
-			if admission.Transport() != transport || admission.Approved() != approved || repository.admissions[0] != admission {
+			if admission.Item() != transport || admission.Approved() != approved || repository.admissions[0] != admission {
 				t.Fatalf("неверный результат приёмки: %+v", admission)
 			}
 			active, err := fleet.ActiveTransports()

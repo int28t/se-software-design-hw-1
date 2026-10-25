@@ -6,12 +6,14 @@ func (s *session) showReport() error {
 		return s.printf("Ошибка: %v. Повторите запрос.\n", err)
 	}
 	return s.printf(
-		"Транспорта на балансе: %d\n"+
+		"Всего объектов на балансе: %d\n"+
+			"Вещей на балансе: %d\n"+
+			"Транспорта на балансе: %d\n"+
 			"Допущено в активный парк: %d\n"+
 			"Отклонено техосмотром: %d\n"+
 			"Суточная энергия всего баланса: %g кВт·ч/сутки\n"+
 			"Суточная энергия активного транспорта: %g кВт·ч/сутки\n",
-		report.TotalTransports, report.ActiveTransports, report.RejectedTransports,
+		report.TotalAssets, report.TotalItems, report.TotalTransports, report.ActiveTransports, report.RejectedTransports,
 		report.TotalDailyEnergyKWh, report.ActiveDailyEnergyKWh,
 	)
 }

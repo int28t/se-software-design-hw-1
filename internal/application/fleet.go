@@ -1,4 +1,4 @@
-// Package application реализует сценарии приёмки и допуска транспорта.
+// Package application реализует сценарии приёмки транспорта и учёта баланса.
 package application
 
 import (
@@ -17,28 +17,29 @@ type Inspector interface {
 	Inspect(domain.Vehicle) (bool, error)
 }
 
-// Repository хранит результаты приёмки. Add не должен перезаписывать номер
+// Repository хранит записи баланса. Add не должен перезаписывать номер
 // или изменять состояние при ошибке. List возвращает записи по номеру.
 type Repository interface {
-	Add(Admission) error
-	List() ([]Admission, error)
+	Add(InventoryRecord) error
+	List() ([]InventoryRecord, error)
 }
 
-// Admission хранит транспорт и неизменяемое решение техосмотра.
-// Запись создаётся сценарием приёмки после вызова Inspector.
-type Admission struct {
-	transport domain.Vehicle
-	approved  bool
+// InventoryRecord хранит объект на балансе и решение техосмотра транспорта.
+// Вещи не проходят техосмотр и не имеют допуска в активный парк.
+type InventoryRecord struct {
+	item     domain.InventoryItem
+	approved bool
 }
 
-// Transport возвращает транспорт, прошедший процедуру приёмки.
-func (a Admission) Transport() domain.Vehicle {
-	return a.transport
+// Item возвращает инвентаризируемый объект.
+func (r InventoryRecord) Item() domain.InventoryItem {
+	return r.item
 }
 
 // Approved сообщает, разрешена ли выдача транспорта в прокат.
-func (a Admission) Approved() bool {
-	return a.approved
+// Для вещей всегда возвращает false.
+func (r InventoryRecord) Approved() bool {
+	return r.approved
 }
 
 // Fleet выполняет сценарии учёта транспорта через внедрённые зависимости.
@@ -55,17 +56,17 @@ func NewFleet(inspector Inspector, repository Repository) *Fleet {
 
 // Admit проводит техосмотр и сохраняет его решение вместе с транспортом.
 // Отклонённый транспорт остаётся на балансе, но не попадает в активный парк.
-func (f *Fleet) Admit(transport domain.Vehicle) (Admission, error) {
+func (f *Fleet) Admit(transport domain.Vehicle) (InventoryRecord, error) {
 	if err := domain.ValidateVehicle(transport); err != nil {
-		return Admission{}, fmt.Errorf("приёмка: %w", err)
+		return InventoryRecord{}, fmt.Errorf("приёмка: %w", err)
 	}
 	approved, err := f.inspector.Inspect(transport)
 	if err != nil {
-		return Admission{}, fmt.Errorf("техосмотр: %w", err)
+		return InventoryRecord{}, fmt.Errorf("техосмотр: %w", err)
 	}
-	admission := Admission{transport: transport, approved: approved}
+	admission := InventoryRecord{item: transport, approved: approved}
 	if err := f.repository.Add(admission); err != nil {
-		return Admission{}, fmt.Errorf("постановка на баланс: %w", err)
+		return InventoryRecord{}, fmt.Errorf("постановка на баланс: %w", err)
 	}
 	return admission, nil
 }
@@ -78,8 +79,8 @@ func (f *Fleet) ActiveTransports() ([]domain.Vehicle, error) {
 	}
 	transports := make([]domain.Vehicle, 0, len(admissions))
 	for _, admission := range admissions {
-		if admission.Approved() {
-			transports = append(transports, admission.Transport())
+		if transport, ok := admission.Item().(domain.Vehicle); ok && admission.Approved() {
+			transports = append(transports, transport)
 		}
 	}
 	return transports, nil

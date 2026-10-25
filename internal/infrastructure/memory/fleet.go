@@ -1,4 +1,4 @@
-// Package memory хранит результаты приёмки в памяти одной сессии.
+// Package memory хранит баланс в памяти одной сессии.
 package memory
 
 import (
@@ -11,32 +11,32 @@ import (
 	"escooter-sharing/internal/domain"
 )
 
-// FleetRepository хранит записи приёмки по инвентарному номеру.
+// FleetRepository хранит транспорт и вещи по общему инвентарному номеру.
 // Используется последовательно, без конкурентного доступа.
 // Нулевое значение готово к использованию.
 type FleetRepository struct {
-	admissions map[string]application.Admission
+	admissions map[string]application.InventoryRecord
 }
 
 // Add добавляет запись, не перезаписывая уже занятый инвентарный номер.
-func (r *FleetRepository) Add(admission application.Admission) error {
-	if err := domain.ValidateVehicle(admission.Transport()); err != nil {
+func (r *FleetRepository) Add(admission application.InventoryRecord) error {
+	if err := domain.ValidateInventoryItem(admission.Item()); err != nil {
 		return fmt.Errorf("запись на баланс: %w", err)
 	}
-	number := admission.Transport().InventoryNumber()
+	number := admission.Item().InventoryNumber()
 	if _, exists := r.admissions[number]; exists {
 		return fmt.Errorf("%w: %s", application.ErrDuplicateInventoryNumber, number)
 	}
 	if r.admissions == nil {
-		r.admissions = make(map[string]application.Admission)
+		r.admissions = make(map[string]application.InventoryRecord)
 	}
 	r.admissions[number] = admission
 	return nil
 }
 
 // List возвращает отдельный срез записей, упорядоченных по номеру.
-func (r *FleetRepository) List() ([]application.Admission, error) {
-	return slices.SortedFunc(maps.Values(r.admissions), func(a, b application.Admission) int {
-		return cmp.Compare(a.Transport().InventoryNumber(), b.Transport().InventoryNumber())
+func (r *FleetRepository) List() ([]application.InventoryRecord, error) {
+	return slices.SortedFunc(maps.Values(r.admissions), func(a, b application.InventoryRecord) int {
+		return cmp.Compare(a.Item().InventoryNumber(), b.Item().InventoryNumber())
 	}), nil
 }

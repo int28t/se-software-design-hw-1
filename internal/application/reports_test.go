@@ -42,6 +42,7 @@ func TestReportMixedFleet(t *testing.T) {
 		}
 	}
 	want := application.Report{
+		TotalAssets:     4,
 		TotalTransports: 4, ActiveTransports: 3, RejectedTransports: 1,
 		TotalDailyEnergyKWh: 9.75, ActiveDailyEnergyKWh: 7.25,
 	}
@@ -68,7 +69,7 @@ func TestReportEmptyAndNonElectricFleet(t *testing.T) {
 		t.Fatal(err)
 	}
 	got, err = fleet.Report()
-	want := application.Report{TotalTransports: 1, RejectedTransports: 1}
+	want := application.Report{TotalAssets: 1, TotalTransports: 1, RejectedTransports: 1}
 	if err != nil || got != want {
 		t.Fatalf("парк без потребления: %+v, %v; want %+v", got, err, want)
 	}

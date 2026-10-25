@@ -92,9 +92,9 @@ func TestRunEOFBeforeEnergyDoesNotAdmit(t *testing.T) {
 
 type reportFailureRepository struct{ err error }
 
-func (r reportFailureRepository) Add(application.Admission) error { return r.err }
+func (r reportFailureRepository) Add(application.InventoryRecord) error { return r.err }
 
-func (r reportFailureRepository) List() ([]application.Admission, error) { return nil, r.err }
+func (r reportFailureRepository) List() ([]application.InventoryRecord, error) { return nil, r.err }
 
 func TestRunReportStorageError(t *testing.T) {
 	t.Parallel()

@@ -14,6 +14,8 @@ var ErrEnergyOverflow = errors.New("суммарный расход энерги
 // Report содержит показатели всего баланса и активного транспорта.
 // Энергия означает сумму заданных суточных расходов, а не фактический замер.
 type Report struct {
+	TotalAssets          int
+	TotalItems           int
 	TotalTransports      int
 	ActiveTransports     int
 	RejectedTransports   int
@@ -21,23 +23,30 @@ type Report struct {
 	ActiveDailyEnergyKWh float64
 }
 
-// Report рассчитывает количество транспорта и суточную энергию по одному снимку баланса.
+// Report рассчитывает количество объектов и суточную энергию по одному снимку баланса.
 func (f *Fleet) Report() (Report, error) {
 	admissions, err := f.repository.List()
 	if err != nil {
 		return Report{}, fmt.Errorf("отчёт о парке: %w", err)
 	}
-	report := Report{TotalTransports: len(admissions)}
+	report := Report{TotalAssets: len(admissions)}
 	for _, admission := range admissions {
-		if admission.Approved() {
-			report.ActiveTransports++
+		_, isTransport := admission.Item().(domain.Vehicle)
+		active := isTransport && admission.Approved()
+		if isTransport {
+			report.TotalTransports++
+			if active {
+				report.ActiveTransports++
+			} else {
+				report.RejectedTransports++
+			}
 		} else {
-			report.RejectedTransports++
+			report.TotalItems++
 		}
-		if consumer, ok := admission.Transport().(domain.EnergyConsumer); ok {
+		if consumer, ok := admission.Item().(domain.EnergyConsumer); ok {
 			energy := consumer.DailyEnergyKWh()
 			report.TotalDailyEnergyKWh += energy
-			if admission.Approved() {
+			if active {
 				report.ActiveDailyEnergyKWh += energy
 			}
 		}

@@ -17,7 +17,7 @@ var errInputClosed = errors.New("ввод завершён")
 
 var errInvalidInput = errors.New("некорректный ввод")
 
-const menu = "\nВышКат\n1. Добавить транспорт без электропривода\n2. Активный парк\n3. Отчёт о парке\n4. Добавить электротранспорт\n5. Техника для новичков\n0. Выход\n> "
+const menu = "\nВышКат\n1. Добавить транспорт без электропривода\n2. Активный парк\n3. Отчёт о парке\n4. Добавить электротранспорт\n5. Техника для новичков\n6. Добавить шлем\n7. Добавить зарядную станцию\n8. Инвентарная ведомость\n0. Выход\n> "
 
 type session struct {
 	fleet   *application.Fleet
@@ -55,8 +55,14 @@ func (s *session) run() error {
 			err = s.admit(true)
 		case "5":
 			err = s.showBeginners()
+		case "6":
+			err = s.addItem(false)
+		case "7":
+			err = s.addItem(true)
+		case "8":
+			err = s.showInventory()
 		default:
-			err = s.printf("Неизвестная команда. Выберите 0, 1, 2, 3, 4 или 5.\n")
+			err = s.printf("Неизвестная команда. Выберите действие от 0 до 8.\n")
 		}
 		if err != nil {
 			return err
@@ -83,11 +89,7 @@ func (s *session) admit(electric bool) error {
 }
 
 func (s *session) readTransport(electric bool) (domain.Vehicle, error) {
-	number, err := s.readLine("Инвентарный номер: ")
-	if err != nil {
-		return nil, err
-	}
-	name, err := s.readLine("Название: ")
+	number, name, err := s.readIdentity()
 	if err != nil {
 		return nil, err
 	}
@@ -114,13 +116,9 @@ func (s *session) readTransport(electric bool) (domain.Vehicle, error) {
 	if !electric {
 		return transport, nil
 	}
-	consumption, err := s.readLine("Суточный расход энергии (кВт·ч): ")
+	dailyEnergyKWh, err := s.readEnergy()
 	if err != nil {
 		return nil, err
-	}
-	dailyEnergyKWh, err := strconv.ParseFloat(strings.ReplaceAll(consumption, ",", "."), 64)
-	if err != nil {
-		return nil, fmt.Errorf("%w: укажите расход энергии числом, например 2.5", errInvalidInput)
 	}
 	return domain.NewElectricTransport(number, name, condition == "да", beginnerEase, dailyEnergyKWh)
 }

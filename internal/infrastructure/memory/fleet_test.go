@@ -40,24 +40,24 @@ func TestFleetRepositoryPreservesRecordsAndRejectsDuplicate(t *testing.T) {
 	if len(admissions) != 2 {
 		t.Fatalf("records = %d, want 2", len(admissions))
 	}
-	if admissions[0].Transport().InventoryNumber() != "S-1" || !admissions[0].Approved() || admissions[0].Transport().Name() != "Самокат" {
+	if admissions[0].Item().InventoryNumber() != "S-1" || !admissions[0].Approved() || admissions[0].Item().Name() != "Самокат" {
 		t.Fatalf("перезаписана или нарушена сортировка S-1: %+v", admissions[0])
 	}
-	if admissions[1].Transport().InventoryNumber() != "S-2" || admissions[1].Approved() {
+	if admissions[1].Item().InventoryNumber() != "S-2" || admissions[1].Approved() {
 		t.Fatalf("не сохранён отказ S-2: %+v", admissions[1])
 	}
-	admissions[0] = application.Admission{}
+	admissions[0] = application.InventoryRecord{}
 	admissions, err = repository.List()
 	if err != nil || !admissions[0].Approved() {
 		t.Fatalf("изменение среза повредило хранилище: %v, %v", admissions, err)
 	}
 }
 
-func TestFleetRepositoryRejectsZeroAdmission(t *testing.T) {
+func TestFleetRepositoryRejectsZeroRecord(t *testing.T) {
 	t.Parallel()
 	repository := &memory.FleetRepository{}
-	if err := repository.Add(application.Admission{}); !errors.Is(err, domain.ErrInvalidTransport) {
-		t.Fatalf("Add() error = %v, want ErrInvalidTransport", err)
+	if err := repository.Add(application.InventoryRecord{}); !errors.Is(err, domain.ErrInvalidItem) {
+		t.Fatalf("Add() error = %v, want ErrInvalidItem", err)
 	}
 	admissions, err := repository.List()
 	if err != nil || len(admissions) != 0 {
