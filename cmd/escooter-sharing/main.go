@@ -5,16 +5,11 @@ import (
 	"fmt"
 	"os"
 
-	"escooter-sharing/internal/application"
-	"escooter-sharing/internal/cli"
-	"escooter-sharing/internal/domain"
-	"escooter-sharing/internal/infrastructure/memory"
+	"escooter-sharing/internal/bootstrap"
 )
 
 func main() {
-	repository := &memory.FleetRepository{}
-	fleet := application.NewFleet(domain.ServiceCenter{}, repository)
-	if err := cli.Run(fleet, os.Stdin, os.Stdout); err != nil {
+	if err := bootstrap.Run(os.Stdin, os.Stdout); err != nil {
 		fmt.Fprintln(os.Stderr, "Ошибка:", err)
 		os.Exit(1)
 	}
