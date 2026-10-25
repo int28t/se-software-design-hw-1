@@ -19,6 +19,15 @@ func TestBeginnerEaseBoundsAndRule(t *testing.T) {
 		{name: "электротранспорт", new: func(ease int) (domain.Vehicle, error) {
 			return domain.NewElectricTransport("E-1", "Электросамокат", true, ease, 1.25)
 		}},
+		{name: "велосипед", new: func(ease int) (domain.Vehicle, error) {
+			return domain.NewBicycle("B-1", "Велосипед", true, ease)
+		}},
+		{name: "самокат", new: func(ease int) (domain.Vehicle, error) {
+			return domain.NewScooter("S-1", "Самокат", true, ease, 1.25)
+		}},
+		{name: "электровелосипед", new: func(ease int) (domain.Vehicle, error) {
+			return domain.NewElectricBicycle("E-1", "Электровелосипед", true, ease, 1.25)
+		}},
 	}
 	tests := []struct {
 		name     string

@@ -17,7 +17,15 @@ var errInputClosed = errors.New("ввод завершён")
 
 var errInvalidInput = errors.New("некорректный ввод")
 
-const menu = "\nВышКат\n1. Добавить транспорт без электропривода\n2. Активный парк\n3. Отчёт о парке\n4. Добавить электротранспорт\n5. Техника для новичков\n6. Добавить шлем\n7. Добавить зарядную станцию\n8. Инвентарная ведомость\n0. Выход\n> "
+const menu = "\nВышКат\n1. Добавить велосипед\n2. Активный парк\n3. Отчёт о парке\n4. Добавить электросамокат\n5. Техника для новичков\n6. Добавить шлем\n7. Добавить зарядную станцию\n8. Инвентарная ведомость\n9. Добавить электровелосипед\n0. Выход\n> "
+
+type transportKind uint8
+
+const (
+	bicycleKind transportKind = iota
+	scooterKind
+	electricBicycleKind
+)
 
 type session struct {
 	fleet   *application.Fleet
@@ -46,13 +54,13 @@ func (s *session) run() error {
 		case "0":
 			return nil
 		case "1":
-			err = s.admit(false)
+			err = s.admit(bicycleKind)
 		case "2":
 			err = s.showActive()
 		case "3":
 			err = s.showReport()
 		case "4":
-			err = s.admit(true)
+			err = s.admit(scooterKind)
 		case "5":
 			err = s.showBeginners()
 		case "6":
@@ -61,8 +69,10 @@ func (s *session) run() error {
 			err = s.addItem(true)
 		case "8":
 			err = s.showInventory()
+		case "9":
+			err = s.admit(electricBicycleKind)
 		default:
-			err = s.printf("Неизвестная команда. Выберите действие от 0 до 8.\n")
+			err = s.printf("Неизвестная команда. Выберите действие от 0 до 9.\n")
 		}
 		if err != nil {
 			return err
@@ -70,8 +80,8 @@ func (s *session) run() error {
 	}
 }
 
-func (s *session) admit(electric bool) error {
-	transport, err := s.readTransport(electric)
+func (s *session) admit(kind transportKind) error {
+	transport, err := s.readTransport(kind)
 	if errors.Is(err, domain.ErrInvalidTransport) || errors.Is(err, errInvalidInput) {
 		return s.printf("Ошибка: %v. Повторите добавление.\n", err)
 	}
@@ -88,7 +98,7 @@ func (s *session) admit(electric bool) error {
 	return s.printf("Транспорт %q (%s) отклонён техосмотром; оставлен на балансе.\n", transport.Name(), transport.InventoryNumber())
 }
 
-func (s *session) readTransport(electric bool) (domain.Vehicle, error) {
+func (s *session) readTransport(kind transportKind) (domain.Vehicle, error) {
 	number, name, err := s.readIdentity()
 	if err != nil {
 		return nil, err
@@ -109,18 +119,24 @@ func (s *session) readTransport(electric bool) (domain.Vehicle, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%w: укажите простоту целым числом от 1 до 10", errInvalidInput)
 	}
-	transport, err := domain.NewTransport(number, name, condition == "да", beginnerEase)
-	if err != nil {
+	if _, err := domain.NewTransport(number, name, condition == "да", beginnerEase); err != nil {
 		return nil, err
 	}
-	if !electric {
-		return transport, nil
+	if kind == bicycleKind {
+		return domain.NewBicycle(number, name, condition == "да", beginnerEase)
 	}
 	dailyEnergyKWh, err := s.readEnergy()
 	if err != nil {
 		return nil, err
 	}
-	return domain.NewElectricTransport(number, name, condition == "да", beginnerEase, dailyEnergyKWh)
+	switch kind {
+	case scooterKind:
+		return domain.NewScooter(number, name, condition == "да", beginnerEase, dailyEnergyKWh)
+	case electricBicycleKind:
+		return domain.NewElectricBicycle(number, name, condition == "да", beginnerEase, dailyEnergyKWh)
+	default:
+		return nil, fmt.Errorf("%w: неизвестный вид транспорта", errInvalidInput)
+	}
 }
 
 func (s *session) showActive() error {

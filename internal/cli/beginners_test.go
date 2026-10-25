@@ -63,7 +63,7 @@ func TestRunNoBeginnerTransports(t *testing.T) {
 
 func TestRunInvalidBeginnerEase(t *testing.T) {
 	t.Parallel()
-	for _, command := range []string{"1", "4"} {
+	for _, command := range []string{"1", "4", "9"} {
 		for _, ease := range []string{"", "abc", "1.5", "-1", "0", "11", "999999999999999999999999"} {
 			t.Run(command+"/"+ease, func(t *testing.T) {
 				t.Parallel()
