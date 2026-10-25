@@ -8,6 +8,7 @@ import (
 	"slices"
 
 	"escooter-sharing/internal/application"
+	"escooter-sharing/internal/domain"
 )
 
 // FleetRepository хранит записи приёмки по инвентарному номеру.
@@ -19,7 +20,7 @@ type FleetRepository struct {
 
 // Add добавляет запись, не перезаписывая уже занятый инвентарный номер.
 func (r *FleetRepository) Add(admission application.Admission) error {
-	if err := admission.Transport().Validate(); err != nil {
+	if err := domain.ValidateVehicle(admission.Transport()); err != nil {
 		return fmt.Errorf("запись на баланс: %w", err)
 	}
 	number := admission.Transport().InventoryNumber()

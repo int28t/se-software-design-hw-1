@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 
 	"escooter-sharing/internal/application"
@@ -14,7 +15,9 @@ import (
 
 var errInputClosed = errors.New("ввод завершён")
 
-const menu = "\nВышКат\n1. Добавить транспорт\n2. Активный парк\n0. Выход\n> "
+var errInvalidInput = errors.New("некорректный ввод")
+
+const menu = "\nВышКат\n1. Добавить транспорт без электропривода\n2. Активный парк\n3. Отчёт о парке\n4. Добавить электротранспорт\n0. Выход\n> "
 
 type session struct {
 	fleet   *application.Fleet
@@ -43,11 +46,15 @@ func (s *session) run() error {
 		case "0":
 			return nil
 		case "1":
-			err = s.admit()
+			err = s.admit(false)
 		case "2":
 			err = s.showActive()
+		case "3":
+			err = s.showReport()
+		case "4":
+			err = s.admit(true)
 		default:
-			err = s.printf("Неизвестная команда. Выберите 0, 1 или 2.\n")
+			err = s.printf("Неизвестная команда. Выберите 0, 1, 2, 3 или 4.\n")
 		}
 		if err != nil {
 			return err
@@ -55,35 +62,53 @@ func (s *session) run() error {
 	}
 }
 
-func (s *session) admit() error {
-	number, err := s.readLine("Инвентарный номер: ")
-	if err != nil {
-		return err
-	}
-	name, err := s.readLine("Название: ")
-	if err != nil {
-		return err
-	}
-	condition, err := s.readLine("Технически исправен (да/нет): ")
-	if err != nil {
-		return err
-	}
-	condition = strings.ToLower(condition)
-	if condition != "да" && condition != "нет" {
-		return s.printf("Ошибка: для технического состояния введите «да» или «нет».\n")
-	}
-	transport, err := domain.NewTransport(number, name, condition == "да")
-	if err != nil {
+func (s *session) admit(electric bool) error {
+	transport, err := s.readTransport(electric)
+	if errors.Is(err, domain.ErrInvalidTransport) || errors.Is(err, errInvalidInput) {
 		return s.printf("Ошибка: %v. Повторите добавление.\n", err)
+	}
+	if err != nil {
+		return err
 	}
 	admission, err := s.fleet.Admit(transport)
 	if err != nil {
 		return s.printf("Ошибка: %v. Повторите добавление.\n", err)
 	}
 	if admission.Approved() {
-		return s.printf("Транспорт %q (%s) допущен в активный парк.\n", transport.Name(), number)
+		return s.printf("Транспорт %q (%s) допущен в активный парк.\n", transport.Name(), transport.InventoryNumber())
 	}
-	return s.printf("Транспорт %q (%s) отклонён техосмотром; оставлен на балансе.\n", transport.Name(), number)
+	return s.printf("Транспорт %q (%s) отклонён техосмотром; оставлен на балансе.\n", transport.Name(), transport.InventoryNumber())
+}
+
+func (s *session) readTransport(electric bool) (domain.Vehicle, error) {
+	number, err := s.readLine("Инвентарный номер: ")
+	if err != nil {
+		return nil, err
+	}
+	name, err := s.readLine("Название: ")
+	if err != nil {
+		return nil, err
+	}
+	condition, err := s.readLine("Технически исправен (да/нет): ")
+	if err != nil {
+		return nil, err
+	}
+	condition = strings.ToLower(condition)
+	if condition != "да" && condition != "нет" {
+		return nil, fmt.Errorf("%w: для технического состояния введите «да» или «нет»", errInvalidInput)
+	}
+	if !electric {
+		return domain.NewTransport(number, name, condition == "да")
+	}
+	consumption, err := s.readLine("Суточный расход энергии (кВт·ч): ")
+	if err != nil {
+		return nil, err
+	}
+	dailyEnergyKWh, err := strconv.ParseFloat(strings.ReplaceAll(consumption, ",", "."), 64)
+	if err != nil {
+		return nil, fmt.Errorf("%w: укажите расход энергии числом, например 2.5", errInvalidInput)
+	}
+	return domain.NewElectricTransport(number, name, condition == "да", dailyEnergyKWh)
 }
 
 func (s *session) showActive() error {

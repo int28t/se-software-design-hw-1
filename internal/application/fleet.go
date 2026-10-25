@@ -14,7 +14,7 @@ var ErrDuplicateInventoryNumber = errors.New("инвентарный номер 
 // Inspector проверяет транспорт перед его приёмкой.
 // false без ошибки означает отказ по техническому состоянию.
 type Inspector interface {
-	Inspect(domain.Transport) (bool, error)
+	Inspect(domain.Vehicle) (bool, error)
 }
 
 // Repository хранит результаты приёмки. Add не должен перезаписывать номер
@@ -27,12 +27,12 @@ type Repository interface {
 // Admission хранит транспорт и неизменяемое решение техосмотра.
 // Запись создаётся сценарием приёмки после вызова Inspector.
 type Admission struct {
-	transport domain.Transport
+	transport domain.Vehicle
 	approved  bool
 }
 
 // Transport возвращает транспорт, прошедший процедуру приёмки.
-func (a Admission) Transport() domain.Transport {
+func (a Admission) Transport() domain.Vehicle {
 	return a.transport
 }
 
@@ -55,8 +55,8 @@ func NewFleet(inspector Inspector, repository Repository) *Fleet {
 
 // Admit проводит техосмотр и сохраняет его решение вместе с транспортом.
 // Отклонённый транспорт остаётся на балансе, но не попадает в активный парк.
-func (f *Fleet) Admit(transport domain.Transport) (Admission, error) {
-	if err := transport.Validate(); err != nil {
+func (f *Fleet) Admit(transport domain.Vehicle) (Admission, error) {
+	if err := domain.ValidateVehicle(transport); err != nil {
 		return Admission{}, fmt.Errorf("приёмка: %w", err)
 	}
 	approved, err := f.inspector.Inspect(transport)
@@ -71,12 +71,12 @@ func (f *Fleet) Admit(transport domain.Transport) (Admission, error) {
 }
 
 // ActiveTransports возвращает только допущенный в прокат транспорт.
-func (f *Fleet) ActiveTransports() ([]domain.Transport, error) {
+func (f *Fleet) ActiveTransports() ([]domain.Vehicle, error) {
 	admissions, err := f.repository.List()
 	if err != nil {
 		return nil, fmt.Errorf("активный парк: %w", err)
 	}
-	transports := make([]domain.Transport, 0, len(admissions))
+	transports := make([]domain.Vehicle, 0, len(admissions))
 	for _, admission := range admissions {
 		if admission.Approved() {
 			transports = append(transports, admission.Transport())

@@ -10,9 +10,9 @@ import (
 	"escooter-sharing/internal/domain"
 )
 
-type inspectorFunc func(domain.Transport) (bool, error)
+type inspectorFunc func(domain.Vehicle) (bool, error)
 
-func (f inspectorFunc) Inspect(transport domain.Transport) (bool, error) {
+func (f inspectorFunc) Inspect(transport domain.Vehicle) (bool, error) {
 	return f(transport)
 }
 
@@ -53,7 +53,7 @@ func TestAdmitUsesInjectedInspectionBeforeSaving(t *testing.T) {
 			repository := &repositoryStub{}
 			transport := makeTransport(t, "S-1", !approved)
 			calls := 0
-			inspector := inspectorFunc(func(got domain.Transport) (bool, error) {
+			inspector := inspectorFunc(func(got domain.Vehicle) (bool, error) {
 				calls++
 				if got != transport {
 					t.Errorf("Inspect() transport = %+v, want %+v", got, transport)
@@ -79,7 +79,7 @@ func TestAdmitUsesInjectedInspectionBeforeSaving(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if approved && !slices.Equal(active, []domain.Transport{transport}) {
+			if approved && !slices.Equal(active, []domain.Vehicle{transport}) {
 				t.Fatalf("ActiveTransports() = %v, want принятый транспорт", active)
 			}
 			if !approved && len(active) != 0 {
@@ -92,7 +92,7 @@ func TestAdmitUsesInjectedInspectionBeforeSaving(t *testing.T) {
 func TestAdmitInvalidTransportDoesNotInspectOrSave(t *testing.T) {
 	t.Parallel()
 	repository := &repositoryStub{}
-	inspector := inspectorFunc(func(domain.Transport) (bool, error) {
+	inspector := inspectorFunc(func(domain.Vehicle) (bool, error) {
 		t.Error("Inspect не должен вызываться для пустого транспорта")
 		return true, nil
 	})
@@ -107,7 +107,7 @@ func TestAdmitInspectionErrorDoesNotSave(t *testing.T) {
 	t.Parallel()
 	inspectionErr := errors.New("техосмотр недоступен")
 	repository := &repositoryStub{}
-	inspector := inspectorFunc(func(domain.Transport) (bool, error) {
+	inspector := inspectorFunc(func(domain.Vehicle) (bool, error) {
 		return true, fmt.Errorf("проверка: %w", inspectionErr)
 	})
 	fleet := application.NewFleet(inspector, repository)
@@ -148,12 +148,12 @@ func TestActiveTransportsFiltersMixedFleet(t *testing.T) {
 		}
 	}
 	active, err = fleet.ActiveTransports()
-	if err != nil || !slices.Equal(active, []domain.Transport{accepted}) {
+	if err != nil || !slices.Equal(active, []domain.Vehicle{accepted}) {
 		t.Fatalf("ActiveTransports() = %v, %v; want только S-1", active, err)
 	}
 	active[0] = rejected
 	active, err = fleet.ActiveTransports()
-	if err != nil || !slices.Equal(active, []domain.Transport{accepted}) {
+	if err != nil || !slices.Equal(active, []domain.Vehicle{accepted}) {
 		t.Fatalf("изменение результата повредило парк: %v, %v", active, err)
 	}
 }
