@@ -64,8 +64,22 @@ func TestServiceCenterInspect(t *testing.T) {
 
 func TestServiceCenterRejectsZeroTransport(t *testing.T) {
 	t.Parallel()
-	approved, err := (domain.ServiceCenter{}).Inspect(domain.Transport{})
-	if approved || !errors.Is(err, domain.ErrInvalidTransport) {
-		t.Fatalf("Inspect() = %v, %v; want false, ErrInvalidTransport", approved, err)
+	for _, tt := range []struct {
+		name      string
+		transport domain.Vehicle
+	}{
+		{name: "базовый транспорт", transport: domain.Transport{}},
+		{name: "электротранспорт", transport: domain.ElectricTransport{}},
+		{name: "велосипед", transport: domain.Bicycle{}},
+		{name: "самокат", transport: domain.Scooter{}},
+		{name: "электровелосипед", transport: domain.ElectricBicycle{}},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			approved, err := (domain.ServiceCenter{}).Inspect(tt.transport)
+			if approved || !errors.Is(err, domain.ErrInvalidTransport) {
+				t.Fatalf("Inspect() = %v, %v; want false, ErrInvalidTransport", approved, err)
+			}
+		})
 	}
 }
