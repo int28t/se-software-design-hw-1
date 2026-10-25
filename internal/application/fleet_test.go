@@ -38,7 +38,7 @@ func (r *repositoryStub) List() ([]application.Admission, error) {
 
 func makeTransport(t *testing.T, number string, serviceable bool) domain.Transport {
 	t.Helper()
-	transport, err := domain.NewTransport(number, "Самокат", serviceable)
+	transport, err := domain.NewTransport(number, "Самокат", serviceable, 6)
 	if err != nil {
 		t.Fatal(err)
 	}

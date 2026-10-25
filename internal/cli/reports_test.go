@@ -16,7 +16,7 @@ func TestRunEnergyReport(t *testing.T) {
 	t.Parallel()
 	repository := &memory.FleetRepository{}
 	fleet := application.NewFleet(domain.ServiceCenter{}, repository)
-	input := "4\nE-1\nЭлектросамокат\nда\n1,25\n4\nE-2\nЭлектровелосипед\nнет\n2.5\n1\nB-1\nВелосипед\nда\n3\n0\n"
+	input := "4\nE-1\nЭлектросамокат\nда\n6\n1,25\n4\nE-2\nЭлектровелосипед\nнет\n6\n2.5\n1\nB-1\nВелосипед\nда\n6\n3\n0\n"
 	var output bytes.Buffer
 	if err := cli.Run(fleet, strings.NewReader(input), &output); err != nil {
 		t.Fatal(err)
@@ -62,7 +62,7 @@ func TestRunInvalidEnergy(t *testing.T) {
 			repository := &memory.FleetRepository{}
 			fleet := application.NewFleet(domain.ServiceCenter{}, repository)
 			var output bytes.Buffer
-			input := "4\nE-1\nЭлектросамокат\nда\n" + consumption + "\n0\n"
+			input := "4\nE-1\nЭлектросамокат\nда\n6\n" + consumption + "\n0\n"
 			if err := cli.Run(fleet, strings.NewReader(input), &output); err != nil {
 				t.Fatal(err)
 			}
@@ -81,7 +81,7 @@ func TestRunEOFBeforeEnergyDoesNotAdmit(t *testing.T) {
 	t.Parallel()
 	fleet := application.NewFleet(domain.ServiceCenter{}, &memory.FleetRepository{})
 	var output bytes.Buffer
-	if err := cli.Run(fleet, strings.NewReader("4\nE-1\nСамокат\nда\n"), &output); err != nil {
+	if err := cli.Run(fleet, strings.NewReader("4\nE-1\nСамокат\nда\n6\n"), &output); err != nil {
 		t.Fatal(err)
 	}
 	report, err := fleet.Report()

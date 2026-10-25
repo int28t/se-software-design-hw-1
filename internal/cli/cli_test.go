@@ -17,7 +17,7 @@ func TestRunAdmissionAndActiveFleet(t *testing.T) {
 	t.Parallel()
 	repository := &memory.FleetRepository{}
 	fleet := application.NewFleet(domain.ServiceCenter{}, repository)
-	input := "1\nS-2\nКрасный самокат\nнет\n1\nS-1\nСиний самокат\nДА\n1\nS-1\nПодмена\nнет\n2\n0\n"
+	input := "1\nS-2\nКрасный самокат\nнет\n6\n1\nS-1\nСиний самокат\nДА\n6\n1\nS-1\nПодмена\nнет\n6\n2\n0\n"
 	var output bytes.Buffer
 	if err := cli.Run(fleet, strings.NewReader(input), &output); err != nil {
 		t.Fatal(err)
@@ -48,12 +48,13 @@ func TestRunInvalidInputAndEOF(t *testing.T) {
 		{name: "выход", input: "0\n"},
 		{name: "неизвестная команда", input: "9\n0\n", want: "Неизвестная команда"},
 		{name: "пустой парк", input: "2\n0\n", want: "Активный парк пуст"},
-		{name: "пустой номер", input: "1\n \nСамокат\nда\n0\n", want: "укажите инвентарный номер"},
-		{name: "пустое название", input: "1\nS-1\n\nда\n0\n", want: "укажите название"},
+		{name: "пустой номер", input: "1\n \nСамокат\nда\n6\n0\n", want: "укажите инвентарный номер"},
+		{name: "пустое название", input: "1\nS-1\n\nда\n6\n0\n", want: "укажите название"},
 		{name: "неверное состояние", input: "1\nS-1\nСамокат\nможет быть\n0\n", want: "введите «да» или «нет»"},
 		{name: "EOF перед номером", input: "1\n"},
 		{name: "EOF перед названием", input: "1\nS-1\n"},
 		{name: "EOF перед состоянием", input: "1\nS-1\nСамокат\n"},
+		{name: "EOF перед простотой", input: "1\nS-1\nСамокат\nда\n"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

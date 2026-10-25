@@ -25,7 +25,7 @@ func TestNewTransport(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			transport, err := domain.NewTransport(tt.number, tt.title, true)
+			transport, err := domain.NewTransport(tt.number, tt.title, true, 6)
 			if !tt.valid {
 				if !errors.Is(err, domain.ErrInvalidTransport) {
 					t.Fatalf("NewTransport() error = %v, want ErrInvalidTransport", err)
@@ -47,7 +47,7 @@ func TestServiceCenterInspect(t *testing.T) {
 	for _, serviceable := range []bool{true, false} {
 		t.Run(map[bool]string{true: "принят", false: "отклонён"}[serviceable], func(t *testing.T) {
 			t.Parallel()
-			transport, err := domain.NewTransport("S-1", "Самокат", serviceable)
+			transport, err := domain.NewTransport("S-1", "Самокат", serviceable, 6)
 			if err != nil {
 				t.Fatal(err)
 			}

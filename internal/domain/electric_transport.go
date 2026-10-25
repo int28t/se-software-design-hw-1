@@ -12,8 +12,8 @@ type ElectricTransport struct {
 }
 
 // NewElectricTransport создаёт электротранспорт с конечным неотрицательным расходом.
-func NewElectricTransport(inventoryNumber, name string, serviceable bool, dailyEnergyKWh float64) (ElectricTransport, error) {
-	transport, err := NewTransport(inventoryNumber, name, serviceable)
+func NewElectricTransport(inventoryNumber, name string, serviceable bool, beginnerEase int, dailyEnergyKWh float64) (ElectricTransport, error) {
+	transport, err := NewTransport(inventoryNumber, name, serviceable, beginnerEase)
 	if err != nil {
 		return ElectricTransport{}, err
 	}

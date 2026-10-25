@@ -20,7 +20,7 @@ func (c additionalConsumer) DailyEnergyKWh() float64 { return c.energy }
 
 func makeElectricTransport(t *testing.T, number string, serviceable bool, energy float64) domain.ElectricTransport {
 	t.Helper()
-	transport, err := domain.NewElectricTransport(number, "Электросамокат", serviceable, energy)
+	transport, err := domain.NewElectricTransport(number, "Электросамокат", serviceable, 6, energy)
 	if err != nil {
 		t.Fatal(err)
 	}

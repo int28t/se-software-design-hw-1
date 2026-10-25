@@ -17,7 +17,7 @@ func TestFleetRepositoryPreservesRecordsAndRejectsDuplicate(t *testing.T) {
 		number      string
 		serviceable bool
 	}{{"S-2", false}, {"S-1", true}} {
-		transport, err := domain.NewTransport(tc.number, "Самокат", tc.serviceable)
+		transport, err := domain.NewTransport(tc.number, "Самокат", tc.serviceable, 6)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -26,7 +26,7 @@ func TestFleetRepositoryPreservesRecordsAndRejectsDuplicate(t *testing.T) {
 		}
 	}
 
-	duplicate, err := domain.NewTransport(" S-1 ", "Другой транспорт", false)
+	duplicate, err := domain.NewTransport(" S-1 ", "Другой транспорт", false, 6)
 	if err != nil {
 		t.Fatal(err)
 	}

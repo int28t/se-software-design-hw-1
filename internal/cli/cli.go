@@ -17,7 +17,7 @@ var errInputClosed = errors.New("ввод завершён")
 
 var errInvalidInput = errors.New("некорректный ввод")
 
-const menu = "\nВышКат\n1. Добавить транспорт без электропривода\n2. Активный парк\n3. Отчёт о парке\n4. Добавить электротранспорт\n0. Выход\n> "
+const menu = "\nВышКат\n1. Добавить транспорт без электропривода\n2. Активный парк\n3. Отчёт о парке\n4. Добавить электротранспорт\n5. Техника для новичков\n0. Выход\n> "
 
 type session struct {
 	fleet   *application.Fleet
@@ -53,8 +53,10 @@ func (s *session) run() error {
 			err = s.showReport()
 		case "4":
 			err = s.admit(true)
+		case "5":
+			err = s.showBeginners()
 		default:
-			err = s.printf("Неизвестная команда. Выберите 0, 1, 2, 3 или 4.\n")
+			err = s.printf("Неизвестная команда. Выберите 0, 1, 2, 3, 4 или 5.\n")
 		}
 		if err != nil {
 			return err
@@ -97,8 +99,20 @@ func (s *session) readTransport(electric bool) (domain.Vehicle, error) {
 	if condition != "да" && condition != "нет" {
 		return nil, fmt.Errorf("%w: для технического состояния введите «да» или «нет»", errInvalidInput)
 	}
+	ease, err := s.readLine("Простота для новичка (1–10): ")
+	if err != nil {
+		return nil, err
+	}
+	beginnerEase, err := strconv.Atoi(ease)
+	if err != nil {
+		return nil, fmt.Errorf("%w: укажите простоту целым числом от 1 до 10", errInvalidInput)
+	}
+	transport, err := domain.NewTransport(number, name, condition == "да", beginnerEase)
+	if err != nil {
+		return nil, err
+	}
 	if !electric {
-		return domain.NewTransport(number, name, condition == "да")
+		return transport, nil
 	}
 	consumption, err := s.readLine("Суточный расход энергии (кВт·ч): ")
 	if err != nil {
@@ -108,7 +122,7 @@ func (s *session) readTransport(electric bool) (domain.Vehicle, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%w: укажите расход энергии числом, например 2.5", errInvalidInput)
 	}
-	return domain.NewElectricTransport(number, name, condition == "да", dailyEnergyKWh)
+	return domain.NewElectricTransport(number, name, condition == "да", beginnerEase, dailyEnergyKWh)
 }
 
 func (s *session) showActive() error {

@@ -26,7 +26,7 @@ func TestNewElectricTransportEnergy(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			transport, err := domain.NewElectricTransport(" E-1 ", " Электросамокат ", true, tt.energy)
+			transport, err := domain.NewElectricTransport(" E-1 ", " Электросамокат ", true, 6, tt.energy)
 			if !tt.valid {
 				if !errors.Is(err, domain.ErrInvalidTransport) {
 					t.Fatalf("NewElectricTransport() error = %v, want ErrInvalidTransport", err)
@@ -50,7 +50,7 @@ func TestNewElectricTransportEnergy(t *testing.T) {
 
 func TestNewElectricTransportRejectsInvalidIdentity(t *testing.T) {
 	t.Parallel()
-	_, err := domain.NewElectricTransport("", "Электросамокат", true, 1)
+	_, err := domain.NewElectricTransport("", "Электросамокат", true, 6, 1)
 	if !errors.Is(err, domain.ErrInvalidTransport) {
 		t.Fatalf("NewElectricTransport() error = %v, want ErrInvalidTransport", err)
 	}
@@ -58,7 +58,7 @@ func TestNewElectricTransportRejectsInvalidIdentity(t *testing.T) {
 
 func TestTransportWithoutElectricityIsNotEnergyConsumer(t *testing.T) {
 	t.Parallel()
-	transport, err := domain.NewTransport("B-1", "Велосипед", true)
+	transport, err := domain.NewTransport("B-1", "Велосипед", true, 6)
 	if err != nil {
 		t.Fatal(err)
 	}
