@@ -1,10 +1,5 @@
 package domain
 
-import (
-	"fmt"
-	"math"
-)
-
 // ElectricTransport дополняет транспорт суточным расходом электроэнергии.
 type ElectricTransport struct {
 	Transport
@@ -29,10 +24,7 @@ func (t ElectricTransport) Validate() error {
 	if err := t.Transport.Validate(); err != nil {
 		return err
 	}
-	if t.dailyEnergyKWh < 0 || math.IsNaN(t.dailyEnergyKWh) || math.IsInf(t.dailyEnergyKWh, 0) {
-		return fmt.Errorf("%w: расход энергии должен быть конечным числом не меньше нуля", ErrInvalidTransport)
-	}
-	return nil
+	return validateDailyEnergyKWh(t.dailyEnergyKWh, ErrInvalidTransport)
 }
 
 // DailyEnergyKWh возвращает заданный суточный расход в кВт·ч.

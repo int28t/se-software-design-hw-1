@@ -25,32 +25,33 @@ type Report struct {
 
 // Report рассчитывает количество объектов и суточную энергию по одному снимку баланса.
 func (f *Fleet) Report() (Report, error) {
-	admissions, err := f.repository.List()
+	records, err := f.repository.List()
 	if err != nil {
 		return Report{}, fmt.Errorf("отчёт о парке: %w", err)
 	}
-	report := Report{TotalAssets: len(admissions)}
-	for _, admission := range admissions {
-		_, isTransport := admission.Item().(domain.Vehicle)
-		active := isTransport && admission.Approved()
+	report := Report{TotalAssets: len(records)}
+	for _, record := range records {
+		item := record.Item()
+		_, isTransport := item.(domain.Vehicle)
+		active := isTransport && record.Approved()
 		if isTransport {
 			report.TotalTransports++
-			if active {
-				report.ActiveTransports++
-			} else {
-				report.RejectedTransports++
-			}
-		} else {
-			report.TotalItems++
 		}
-		if consumer, ok := admission.Item().(domain.EnergyConsumer); ok {
-			energy := consumer.DailyEnergyKWh()
-			report.TotalDailyEnergyKWh += energy
-			if active {
-				report.ActiveDailyEnergyKWh += energy
-			}
+		if active {
+			report.ActiveTransports++
+		}
+		consumer, ok := item.(domain.EnergyConsumer)
+		if !ok {
+			continue
+		}
+		energy := consumer.DailyEnergyKWh()
+		report.TotalDailyEnergyKWh += energy
+		if active {
+			report.ActiveDailyEnergyKWh += energy
 		}
 	}
+	report.TotalItems = report.TotalAssets - report.TotalTransports
+	report.RejectedTransports = report.TotalTransports - report.ActiveTransports
 	if math.IsInf(report.TotalDailyEnergyKWh, 0) || math.IsInf(report.ActiveDailyEnergyKWh, 0) {
 		return Report{}, ErrEnergyOverflow
 	}

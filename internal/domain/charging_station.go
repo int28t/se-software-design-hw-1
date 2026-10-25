@@ -1,10 +1,5 @@
 package domain
 
-import (
-	"fmt"
-	"math"
-)
-
 // ChargingStation описывает зарядную станцию на балансе.
 type ChargingStation struct {
 	Item
@@ -29,10 +24,7 @@ func (s ChargingStation) Validate() error {
 	if err := s.Item.Validate(); err != nil {
 		return err
 	}
-	if s.dailyEnergyKWh < 0 || math.IsNaN(s.dailyEnergyKWh) || math.IsInf(s.dailyEnergyKWh, 0) {
-		return fmt.Errorf("%w: расход энергии должен быть конечным числом не меньше нуля", ErrInvalidItem)
-	}
-	return nil
+	return validateDailyEnergyKWh(s.dailyEnergyKWh, ErrInvalidItem)
 }
 
 // DailyEnergyKWh возвращает заданный суточный расход станции в кВт·ч.

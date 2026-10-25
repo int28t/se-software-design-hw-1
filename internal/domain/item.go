@@ -2,7 +2,6 @@ package domain
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 )
 
@@ -26,13 +25,7 @@ func NewItem(inventoryNumber, name string) (Item, error) {
 
 // Validate проверяет обязательные поля вещи.
 func (i Item) Validate() error {
-	if i.inventoryNumber == "" {
-		return fmt.Errorf("%w: укажите инвентарный номер", ErrInvalidItem)
-	}
-	if i.name == "" {
-		return fmt.Errorf("%w: укажите название", ErrInvalidItem)
-	}
-	return nil
+	return validateInventoryFields(i.inventoryNumber, i.name, ErrInvalidItem)
 }
 
 // InventoryNumber возвращает инвентарный номер вещи.

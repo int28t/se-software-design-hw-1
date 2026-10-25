@@ -57,11 +57,8 @@ func NewTransport(inventoryNumber, name string, serviceable bool, beginnerEase i
 
 // Validate проверяет данные, в том числе запрещает пустое значение Transport.
 func (t Transport) Validate() error {
-	if t.inventoryNumber == "" {
-		return fmt.Errorf("%w: укажите инвентарный номер", ErrInvalidTransport)
-	}
-	if t.name == "" {
-		return fmt.Errorf("%w: укажите название", ErrInvalidTransport)
+	if err := validateInventoryFields(t.inventoryNumber, t.name, ErrInvalidTransport); err != nil {
+		return err
 	}
 	if t.beginnerEase < minBeginnerEase || t.beginnerEase > maxBeginnerEase {
 		return fmt.Errorf("%w: простота для новичка должна быть от %d до %d", ErrInvalidTransport, minBeginnerEase, maxBeginnerEase)
@@ -92,5 +89,5 @@ func (t Transport) BeginnerEase() int {
 // SuitableForBeginner проверяет правило простоты для новичка.
 // Допуск по техническому состоянию проверяется отдельно при приёмке.
 func (t Transport) SuitableForBeginner() bool {
-	return t.beginnerEase >= beginnerEaseThreshold && t.beginnerEase <= maxBeginnerEase
+	return t.beginnerEase >= beginnerEaseThreshold
 }
