@@ -1,0 +1,15 @@
+version: "2"
+
+run:
+  timeout: 2m
+  modules-download-mode: readonly
+
+linters:
+  default: standard
+  enable:
+    - modernize
+    - errorlint
+    - revive
+    - godot
+    - gocritic
+    - gosec
