@@ -10,12 +10,10 @@ import (
 	"escooter-sharing/internal/application"
 	"escooter-sharing/internal/cli"
 	"escooter-sharing/internal/domain"
-	"escooter-sharing/internal/infrastructure/memory"
 )
 
 func TestRunBeginners(t *testing.T) {
 	t.Parallel()
-	fleet := application.NewFleet(domain.ServiceCenter{}, &memory.FleetRepository{})
 	input := strings.Join([]string{
 		"1", "B-5", "Сложный велосипед", "да", "5",
 		"1", "B-6", "Простой велосипед", "да", "6",
@@ -23,13 +21,10 @@ func TestRunBeginners(t *testing.T) {
 		"4", "R-10", "Неисправный электросамокат", "нет", "10", "2.5",
 		"5", "0", "",
 	}, "\n")
-	var output bytes.Buffer
-	if err := cli.Run(fleet, strings.NewReader(input), &output); err != nil {
-		t.Fatal(err)
-	}
-	_, listing, found := strings.Cut(output.String(), "Техника для новичков:\n")
+	_, output := runSession(t, input)
+	_, listing, found := strings.Cut(output, "Техника для новичков:\n")
 	if !found {
-		t.Fatalf("список не выведен:\n%s", output.String())
+		t.Fatalf("список не выведен:\n%s", output)
 	}
 	for _, want := range []string{
 		"B-6 — Простой велосипед (простота: 6/10)",
@@ -50,13 +45,9 @@ func TestRunNoBeginnerTransports(t *testing.T) {
 		"5\n0\n",
 		"1\nB-5\nВелосипед\nда\n5\n1\nR-10\nНеисправный\nнет\n10\n5\n0\n",
 	} {
-		fleet := application.NewFleet(domain.ServiceCenter{}, &memory.FleetRepository{})
-		var output bytes.Buffer
-		if err := cli.Run(fleet, strings.NewReader(input), &output); err != nil {
-			t.Fatal(err)
-		}
-		if !strings.Contains(output.String(), "Нет доступной техники для новичков.") {
-			t.Fatalf("нет сообщения о пустом списке:\n%s", output.String())
+		_, output := runSession(t, input)
+		if !strings.Contains(output, "Нет доступной техники для новичков.") {
+			t.Fatalf("нет сообщения о пустом списке:\n%s", output)
 		}
 	}
 }
@@ -67,14 +58,10 @@ func TestRunInvalidBeginnerEase(t *testing.T) {
 		for _, ease := range []string{"", "abc", "1.5", "-1", "0", "11", "999999999999999999999999"} {
 			t.Run(command+"/"+ease, func(t *testing.T) {
 				t.Parallel()
-				fleet := application.NewFleet(domain.ServiceCenter{}, &memory.FleetRepository{})
-				var output bytes.Buffer
 				input := fmt.Sprintf("%s\nT-1\nТранспорт\nда\n%s\n0\n", command, ease)
-				if err := cli.Run(fleet, strings.NewReader(input), &output); err != nil {
-					t.Fatal(err)
-				}
-				if !strings.Contains(output.String(), "Ошибка:") {
-					t.Fatalf("нет ошибки для простоты %q:\n%s", ease, output.String())
+				fleet, output := runSession(t, input)
+				if !strings.Contains(output, "Ошибка:") {
+					t.Fatalf("нет ошибки для простоты %q:\n%s", ease, output)
 				}
 				report, err := fleet.Report()
 				if err != nil || report.TotalTransports != 0 {

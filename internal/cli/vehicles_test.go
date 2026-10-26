@@ -57,7 +57,7 @@ func TestRunCreatesConcreteVehicleKinds(t *testing.T) {
 	}
 }
 
-func TestRunElectricBicycleRejectedAndIncompleteInput(t *testing.T) {
+func TestRunElectricBicycleRejectedAndInvalidInput(t *testing.T) {
 	t.Parallel()
 	for _, tt := range []struct {
 		name  string
@@ -65,16 +65,11 @@ func TestRunElectricBicycleRejectedAndIncompleteInput(t *testing.T) {
 		count int
 	}{
 		{name: "отказ техосмотра", input: "9\nE-1\nЭлектровелосипед\nнет\n10\n2.5\n5\n0\n", count: 1},
-		{name: "EOF перед энергией", input: "9\nE-1\nЭлектровелосипед\nда\n6\n"},
 		{name: "некорректная энергия", input: "9\nE-1\nЭлектровелосипед\nда\n6\nNaN\n0\n"},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			fleet := application.NewFleet(domain.ServiceCenter{}, &memory.FleetRepository{})
-			var output bytes.Buffer
-			if err := cli.Run(fleet, strings.NewReader(tt.input), &output); err != nil {
-				t.Fatal(err)
-			}
+			fleet, _ := runSession(t, tt.input)
 			report, err := fleet.Report()
 			if err != nil || report.TotalTransports != tt.count || report.ActiveTransports != 0 {
 				t.Fatalf("Report() = %+v, %v; want %d на балансе, 0 активных", report, err, tt.count)

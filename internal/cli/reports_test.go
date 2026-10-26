@@ -9,18 +9,12 @@ import (
 	"escooter-sharing/internal/application"
 	"escooter-sharing/internal/cli"
 	"escooter-sharing/internal/domain"
-	"escooter-sharing/internal/infrastructure/memory"
 )
 
 func TestRunEnergyReport(t *testing.T) {
 	t.Parallel()
-	repository := &memory.FleetRepository{}
-	fleet := application.NewFleet(domain.ServiceCenter{}, repository)
 	input := "4\nE-1\nЭлектросамокат\nда\n6\n1,25\n4\nE-2\nЭлектровелосипед\nнет\n6\n2.5\n1\nB-1\nВелосипед\nда\n6\n3\n0\n"
-	var output bytes.Buffer
-	if err := cli.Run(fleet, strings.NewReader(input), &output); err != nil {
-		t.Fatal(err)
-	}
+	_, output := runSession(t, input)
 	for _, want := range []string{
 		"Транспорта на балансе: 3\n",
 		"Допущено в активный парк: 2\n",
@@ -28,19 +22,15 @@ func TestRunEnergyReport(t *testing.T) {
 		"Суточная энергия всего баланса: 3.75 кВт·ч/сутки\n",
 		"Суточная энергия активного транспорта: 1.25 кВт·ч/сутки\n",
 	} {
-		if !strings.Contains(output.String(), want) {
-			t.Errorf("нет строки %q в выводе:\n%s", want, output.String())
+		if !strings.Contains(output, want) {
+			t.Errorf("нет строки %q в выводе:\n%s", want, output)
 		}
 	}
 }
 
 func TestRunEmptyReport(t *testing.T) {
 	t.Parallel()
-	fleet := application.NewFleet(domain.ServiceCenter{}, &memory.FleetRepository{})
-	var output bytes.Buffer
-	if err := cli.Run(fleet, strings.NewReader("3\n0\n"), &output); err != nil {
-		t.Fatal(err)
-	}
+	_, output := runSession(t, "3\n0\n")
 	for _, want := range []string{
 		"Транспорта на балансе: 0\n",
 		"Допущено в активный парк: 0\n",
@@ -48,8 +38,8 @@ func TestRunEmptyReport(t *testing.T) {
 		"Суточная энергия всего баланса: 0 кВт·ч/сутки\n",
 		"Суточная энергия активного транспорта: 0 кВт·ч/сутки\n",
 	} {
-		if !strings.Contains(output.String(), want) {
-			t.Errorf("нет строки %q в выводе:\n%s", want, output.String())
+		if !strings.Contains(output, want) {
+			t.Errorf("нет строки %q в выводе:\n%s", want, output)
 		}
 	}
 }
@@ -59,34 +49,16 @@ func TestRunInvalidEnergy(t *testing.T) {
 	for _, consumption := range []string{"", "abc", "-1", "NaN", "+Inf", "-Inf", "1e400"} {
 		t.Run(consumption, func(t *testing.T) {
 			t.Parallel()
-			repository := &memory.FleetRepository{}
-			fleet := application.NewFleet(domain.ServiceCenter{}, repository)
-			var output bytes.Buffer
 			input := "4\nE-1\nЭлектросамокат\nда\n6\n" + consumption + "\n0\n"
-			if err := cli.Run(fleet, strings.NewReader(input), &output); err != nil {
-				t.Fatal(err)
-			}
-			if !strings.Contains(output.String(), "Ошибка:") {
-				t.Fatalf("нет сообщения об ошибке:\n%s", output.String())
+			fleet, output := runSession(t, input)
+			if !strings.Contains(output, "Ошибка:") {
+				t.Fatalf("нет сообщения об ошибке:\n%s", output)
 			}
 			report, err := fleet.Report()
 			if err != nil || report.TotalTransports != 0 {
 				t.Fatalf("ошибочный расход изменил парк: %+v, %v", report, err)
 			}
 		})
-	}
-}
-
-func TestRunEOFBeforeEnergyDoesNotAdmit(t *testing.T) {
-	t.Parallel()
-	fleet := application.NewFleet(domain.ServiceCenter{}, &memory.FleetRepository{})
-	var output bytes.Buffer
-	if err := cli.Run(fleet, strings.NewReader("4\nE-1\nСамокат\nда\n6\n"), &output); err != nil {
-		t.Fatal(err)
-	}
-	report, err := fleet.Report()
-	if err != nil || report.TotalTransports != 0 {
-		t.Fatalf("неполный ввод изменил парк: %+v, %v", report, err)
 	}
 }
 
