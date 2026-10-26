@@ -37,22 +37,3 @@ func (s *session) readItem(chargingStation bool) (domain.InventoryItem, error) {
 	}
 	return domain.NewChargingStation(number, name, energy)
 }
-
-func (s *session) showInventory() error {
-	entries, err := s.fleet.Inventory()
-	if err != nil {
-		return s.printf("Ошибка: %v. Повторите запрос.\n", err)
-	}
-	if len(entries) == 0 {
-		return s.printf("На балансе пока нет объектов.\n")
-	}
-	if err := s.printf("Инвентарная ведомость:\n"); err != nil {
-		return err
-	}
-	for _, entry := range entries {
-		if err := s.printf("%s — %s\n", entry.InventoryNumber, entry.Name); err != nil {
-			return err
-		}
-	}
-	return nil
-}

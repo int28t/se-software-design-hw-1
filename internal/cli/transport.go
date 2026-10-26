@@ -65,22 +65,3 @@ func (s *session) readTransport(kind transportKind) (domain.Vehicle, error) {
 		return nil, fmt.Errorf("%w: неизвестный вид транспорта", errInvalidInput)
 	}
 }
-
-func (s *session) showActive() error {
-	transports, err := s.fleet.ActiveTransports()
-	if err != nil {
-		return s.printf("Ошибка: %v. Повторите запрос.\n", err)
-	}
-	if len(transports) == 0 {
-		return s.printf("Активный парк пуст.\n")
-	}
-	if err := s.printf("Допущенный транспорт:\n"); err != nil {
-		return err
-	}
-	for _, transport := range transports {
-		if err := s.printf("%s — %s\n", transport.InventoryNumber(), transport.Name()); err != nil {
-			return err
-		}
-	}
-	return nil
-}
