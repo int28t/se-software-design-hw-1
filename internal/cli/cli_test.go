@@ -44,8 +44,8 @@ func TestRunInvalidInputAndEOF(t *testing.T) {
 		input string
 		want  string
 	}{
-		{name: "пустой ввод"},
-		{name: "выход", input: "0\n"},
+		{name: "пустой ввод", want: "Ввод завершён. Работа программы завершена."},
+		{name: "выход", input: "0\n", want: "Работа программы завершена."},
 		{name: "неизвестная команда", input: "99\n0\n", want: "Неизвестная команда"},
 		{name: "пустой парк", input: "2\n0\n", want: "Активный парк пуст"},
 		{name: "пустой номер", input: "1\n \nСамокат\nда\n6\n0\n", want: "укажите инвентарный номер"},

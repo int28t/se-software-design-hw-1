@@ -15,7 +15,24 @@ var errInputClosed = errors.New("ввод завершён")
 
 var errInvalidInput = errors.New("некорректный ввод")
 
-const menu = "\nВышКат\n1. Добавить велосипед\n2. Активный парк\n3. Отчёт о парке\n4. Добавить электросамокат\n5. Техника для новичков\n6. Добавить шлем\n7. Добавить зарядную станцию\n8. Инвентарная ведомость\n9. Добавить электровелосипед\n0. Выход\n> "
+const intro = `Данные хранятся только до завершения программы.
+Введите номер действия и нажмите Enter. Выход — 0 в главном меню.
+При ошибке ввода добавление отменяется; выберите действие заново.
+`
+
+const menu = `
+ВышКат
+1. Добавить велосипед
+2. Активный парк
+3. Отчёт о парке
+4. Добавить электросамокат
+5. Техника для новичков
+6. Добавить шлем
+7. Добавить зарядную станцию
+8. Инвентарная ведомость
+9. Добавить электровелосипед
+0. Выход
+> `
 
 type session struct {
 	fleet   *application.Fleet
@@ -27,9 +44,12 @@ type session struct {
 // Ошибки пользовательских данных выводятся в консоль, ошибки потоков возвращаются.
 func Run(fleet *application.Fleet, input io.Reader, output io.Writer) error {
 	s := session{fleet: fleet, scanner: bufio.NewScanner(input), output: output}
+	if err := s.printf("%s", intro); err != nil {
+		return err
+	}
 	err := s.run()
 	if errors.Is(err, errInputClosed) {
-		return nil
+		return s.printf("\nВвод завершён. Работа программы завершена.\n")
 	}
 	return err
 }
@@ -42,7 +62,7 @@ func (s *session) run() error {
 		}
 		switch command {
 		case "0":
-			return nil
+			return s.printf("Работа программы завершена.\n")
 		case "1":
 			err = s.admit(bicycleKind)
 		case "2":

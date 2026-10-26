@@ -34,7 +34,7 @@ func (s *session) readCondition() (bool, error) {
 }
 
 func (s *session) readBeginnerEase() (int, error) {
-	ease, err := s.readLine("Простота для новичка (1–10): ")
+	ease, err := s.readLine("Простота для новичка (1–10; новичкам от 6): ")
 	if err != nil {
 		return 0, err
 	}
@@ -46,7 +46,7 @@ func (s *session) readBeginnerEase() (int, error) {
 }
 
 func (s *session) readEnergy() (float64, error) {
-	consumption, err := s.readLine("Суточный расход энергии (кВт·ч): ")
+	consumption, err := s.readLine("Суточный расход энергии (кВт·ч, например 2.5 или 2,5): ")
 	if err != nil {
 		return 0, err
 	}

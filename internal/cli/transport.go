@@ -30,7 +30,7 @@ func (s *session) admit(kind transportKind) error {
 	if admission.Approved() {
 		return s.printf("Транспорт %q (%s) допущен в активный парк.\n", transport.Name(), transport.InventoryNumber())
 	}
-	return s.printf("Транспорт %q (%s) отклонён техосмотром; оставлен на балансе.\n", transport.Name(), transport.InventoryNumber())
+	return s.printf("Транспорт %q (%s) отклонён техосмотром; оставлен на балансе. В прокат не допущен.\n", transport.Name(), transport.InventoryNumber())
 }
 
 func (s *session) readTransport(kind transportKind) (domain.Vehicle, error) {
