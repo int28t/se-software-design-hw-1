@@ -74,9 +74,9 @@ func (s *session) run() error {
 		case "5":
 			err = s.showBeginners()
 		case "6":
-			err = s.addItem(false)
+			err = s.addItem(s.readHelmet)
 		case "7":
-			err = s.addItem(true)
+			err = s.addItem(s.readChargingStation)
 		case "8":
 			err = s.showInventory()
 		case "9":
