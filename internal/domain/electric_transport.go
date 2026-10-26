@@ -12,11 +12,10 @@ func NewElectricTransport(inventoryNumber, name string, serviceable bool, beginn
 	if err != nil {
 		return ElectricTransport{}, err
 	}
-	electric := ElectricTransport{Transport: transport, dailyEnergyKWh: dailyEnergyKWh}
-	if err := electric.Validate(); err != nil {
+	if err := validateDailyEnergyKWh(dailyEnergyKWh, ErrInvalidTransport); err != nil {
 		return ElectricTransport{}, err
 	}
-	return electric, nil
+	return ElectricTransport{Transport: transport, dailyEnergyKWh: dailyEnergyKWh}, nil
 }
 
 // Validate проверяет данные транспорта и суточный расход энергии.

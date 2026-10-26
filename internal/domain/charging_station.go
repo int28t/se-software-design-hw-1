@@ -12,11 +12,10 @@ func NewChargingStation(inventoryNumber, name string, dailyEnergyKWh float64) (C
 	if err != nil {
 		return ChargingStation{}, err
 	}
-	station := ChargingStation{Item: item, dailyEnergyKWh: dailyEnergyKWh}
-	if err := station.Validate(); err != nil {
+	if err := validateDailyEnergyKWh(dailyEnergyKWh, ErrInvalidItem); err != nil {
 		return ChargingStation{}, err
 	}
-	return station, nil
+	return ChargingStation{Item: item, dailyEnergyKWh: dailyEnergyKWh}, nil
 }
 
 // Validate проверяет данные станции и конечный неотрицательный расход энергии.
